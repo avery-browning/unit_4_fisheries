@@ -87,10 +87,37 @@ summary(model_p)
 install.packages("AER")
 AER::dispersiontest(model_p)
 
-# missing some code here
+# missing some code here - look for q possion 
 
 
 median_ratio_yrs_low_stock = median(collapsed_summary_zero_trunc$ratio_yrs_low_stock)
-FisheryType = collapsed_summary_zero_trunc %>% distinct(FisheryType)
+FisheryType = collapsed_summary_zero_trunc %>% distinct(FisheryType) %>% pull()
+dim(FisheryType)
 
-newdata = expand.grid()
+#newdata = expand.grid(
+#  FisheryType = FisheryType,
+#  ratio_yrs_low_stock 
+#  ratio_yrs_overfished
+#)
+
+
+# continuation of glm - 2026-03-31
+
+summary(model_qp)
+
+model_qp_predict = predict(model_qp, newdata = newdata, type = "response", se.fit = T)
+head(model_qp_predict)
+
+collapse_time_predictions = cbind(newdata, model_qp_predict)
+head(collapse_time_predictions)
+head(collapsed_summary_zero_trunc)
+
+ggplot() +
+  geom_line(aes(x = ratio_yrs_overfished, y = fit, color = FisheryType), data = collapse_time_predictions)
+  geom_ribbon(aes(x = ratio_yrs_overfished, ymin = fit - se.fit, ymax = fit + se.fit, fill = FisheryType)
+              , alpha = 0.3)
+  geom_point(aes(x = ratio_yrs_overfished, y = yrs_collapsed, color = FisheryType), 
+                data = collapsed_summary_zero_trunc)
+
+# okay this is a semi-disaster... don't publish THAT
+# using color to show different categories in a lr model is really useful
