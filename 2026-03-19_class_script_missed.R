@@ -148,3 +148,151 @@ data12_full
 # Filtering joins - semi- and anti-
 
 # semi join
+
+data12_semi = data1 %>%
+  semi_join(data2)
+data12_semi
+
+# In a filtering join, whatever data set you start with first, which in our case, 
+# we've been starting with data 1, no new columns are going to be added, but that data set 
+# will be filtered by the information available in Data 2. So in this case, it said, here's 
+# data 1, just get rid of any rows where the ID does not exist in Data 2.
+# And what I should have been showing you this whole time is you can…
+# explicitly say what column you're using to join the two datasets together. And I haven't, 
+# I've been lazy about it because both of those data sets, data 1 and Data 2, have a column called ID.
+
+# So…
+# The semi-join function is intelligent enough that it can see that they have one and only one column 
+# in column in common, one column in common, and it's going to use that to execute the join. But let's do that.
+# And see that when you explicitly say by equals ID, the result is the same.
+
+data12_semi = semi_join(data1, data2, by = "ID")
+data12_semi
+
+# And that result is, we're just eliminating ID 1, because ID1 does not exist in the second data table.
+# So you're filtering Data Table 1 based off of the information available in Data Table 2.
+
+# anti
+
+data12_anti = anti_join(data1, data2, by = "ID")
+data12_anti
+
+# I kind of like anti-join. That's the one that sometimes I'll bring into my code, and I use it to test stuff.
+# Anti-join says, give me all the stuff that's not available in Data 2.
+# So we know that the ID in common between the two data tables is 2, and so what it returned was the ID 
+# in the first table that does not exist in the second table.
+# And you think, well, that sounds kind of stupid, but actually, when you're at that beginning, 
+# like, designing your project phase, it can be really important.
+# let's say you're… you care about the time series of all these different kinds of fish, but you're 
+# only going to be able to do your project if you have all these extra parameters for them. Like, what is 
+# the typical total length of a cod? You know, and what genus does it live in? Like, the genus one is pretty 
+# easy, but there's these other metrics, like…
+# How long does it usually survive?
+# Maybe you've got a column that's like, what is its most common predator? What is its most common prey item? 
+# And if you need that ancillary data from data 2, to conduct the project that you want to do, 
+# the first thing I would say is, given the data I have in data one, what is missing for me to do 
+# my project? And if it turns out, like, the key variables that I care about are missing,
+
+# re-initializing data1 and data2 for the next part
+# joins sound simple but it can really mess with your data if you are not very careful, which can
+# happen if you accidentally duplicate a row
+
+# Let's do a quick row duplication. I'm gonna go up here, and Data 2, I'm gonna add…
+# two copies of ID, And, I'm gonna add 2 copies of ID 2.
+# And then just some more data for X2. 
+
+data1 = data.frame(ID = c(1,2), X1 = c("a1", "a2")) 
+data2 = data.frame(ID = c(2,2,3), X2 = c("b1", "b2", "b3"))
+
+# And then let's do my favorite join, my lefty join.
+
+data12_lefty = left_join(data1, data2)
+data12_lefty
+
+# Okay, this seems pretty innocent, right? And let's compare it to the original left join.
+# Alright, in the original left join, before I added a second row with ID2 in data 2, this is what I got. 
+# I got 2 rows, which is the same number of rows in data 1. now that I added that second…
+# that additional row in data, too, with ID2, what it did was it wanted to respect that there's 
+# two different pieces of information in X2, and bring them both over, which sounds really kind.
+# Thank you for not dropping information. However, like, Data1 was our sacred database. We left 
+# joined, like Erin said. And just adding rows willy-nilly, depending on what your next step is, could 
+# really mess with your analysis.
+
+# At a bare minimum, always check the dimensions of your data frame after and before you conduct one 
+# of these joins. You want to know what columns did it add, but that's not as scary as what rows did it add.
+# You have to know what rows it added, in case data were duplicated.
+# So live in fear, y'all, and use that dim()
+
+dim(data12_lefty)
+dim(data1)
+
+# data pivots
+
+# Quadrat ID 
+# A quadrat,  I bet most of you know, but it's like a square, often made of PVC, that you could set on 
+# the environment, and then you count all the things within your quadrat, or you do some kind of s
+# ampling within the boundaries of that square. So, let's say you were throwing some quadrats in the 
+# intertidal and counting all the invertebrates that you saw within your square. 
+# So first, I'm going to do it a few times, so each quadrat needs a unique identifier. 
+# We're going to call that quadrat ID, and we're going to pretend that they were 101, 102, 103 and 104.
+# Now, how many… Invertebrates, did I count in each of those quadrats?
+
+survey = data.frame(quadrat_id = c(101,102,103,104),
+                    barnacle = c(2,11,8,27),
+                    chiton = c(1,0,0,2),
+                    mussel = c(0,1,1,4))
+survey
+
+# this is what I call the wide format, and we're gonna transform it into the long format, 
+# and then we're gonna transform it back to the wide format.
+
+# plotting really likes long data. ggplot does magic with long data, and it does not do magic with wide data.
+
+# So let's pivot our data and make it long, where we've got a quadrat ID for one column, the IDs are 101, 2, 
+# 3, and 4, and then we have counts for another column. How many beasties did I find? 
+# And my third column is species. Which species did I count?
+# That's the long format.
+
+
+# Calls is like, which columns do you want to take and lengthen? And we want to lengthen… We can name them explicitly.
+# Then, it says… When you turn all of these distinct columns into a single column, what do you want to call it?
+# And this, again, is not, for me, intuitive, but I want to call the new column names2 is the parameter. 
+# What do you want to call the new column that holds the words Barnacle, chitin, and muscle? I want to call it, probably, taxa.
+
+# It's these three characters that are going to form the data within the taxa column.
+# Barnacle, chitin, and mussel. But we also have the data within the cells of all those variables. Those are called our values. 
+# So now those values need to be in their own distinct column.
+# And what should that column be called? And I think it should be called counts, or N, or something like that. 
+# So we'll say values to equals counts.
+
+long = survey %>%
+  pivot_longer(cols = c("barnacle", "chiton", "mussel"), names_to = "taxa", values_to = "count")
+long
+
+# So this is the long format. You take multiple columns, and you turn them into two columns.
+# One column that contains the name of all the columns that you subsumed into your long pivot, and the 
+# other column contains the values, what was in the cells under all of those old columns.
+
+# we'll do a plot together, too, to show why that's useful.
+
+# Okay, sometimes you get served this data.
+# Often I've been served data that looks like this, and that's great, but if I wanted to run a linear 
+# model, like, how are barnacles impacted by chitinase in the same area?
+# This is not gonna work.
+# So I would have to widen it. So we're gonna go backwards… And we'll call it wide.
+# And so we're going to start with long, and now we're going to use pivot wider.
+
+wide = long %>%
+  pivot_wider(names_from = taxa, values_from = count)
+wide
+survey
+
+# exercise 1.2
+# plot long data
+ggplot(data = long) +
+  geom_point(aes(x = quadrat_id, y = count, color = taxa))
+
+ggplot(data = wide) +
+  geom_point(aes(x = quadrat_id, y = barnacle), color = "violet") +
+  geom_point(aes(x = quadrat_id, y = chiton), color = "cyan") +
+  geom_point(aes(x = quadrat_id, y = mussel), color = "yellowgreen")
