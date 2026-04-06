@@ -455,6 +455,7 @@ collapse_yr = collapse %>%
   summarize(first_collapse_yr = min(year)) %>%
   ungroup()
 
+# error also video playback failure - come back to this 
 
 # I'm gonna start with collapse.
 # I'm gonna pipe…
